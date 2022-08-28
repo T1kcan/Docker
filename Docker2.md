@@ -163,7 +163,7 @@ exit
 ```bash
 mkdir web && cd web
 echo "<h1>Welcome Docker Web Page</h1>" > index.html
-docker run -d --name nginx-new -p 8080:80 -v /home/ec2-user/web:/usr/share/nginx/html nginx
+docker run d- --name nginx-new -p 8080:80 -v /home/ec2-user/web:/usr/share/nginx/html nginx
 # observe http://<public-ip>:8080
 docker exec -it nginx-new bash
 cd usr/share/nginx/html

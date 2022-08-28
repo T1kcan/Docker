@@ -56,7 +56,7 @@ RUN apt install -y apache2 vim-nox
 # set entrypoint
 ENTRYPOINT ["apachectl", "-DFOREGROUND"]
 ---
-docker build -t tbincan/tbincan/web_application:v1.2 .
+docker build -t tbincan/web_application:v1.2 .
 docker images
 docker run -d -p:8080:80 tbincan/web_application:v1.2
 # observe two pages simultaneously
@@ -99,10 +99,84 @@ COPY . /web
 CMD python3 /web/web_app.py
 ```
 ```bash
+docker build .
+# observe that the image has no tag; just image ID
+docker images
+docker tag 6cbdb74e2858 welcome:1.0
+docker images
+docker inspect welcome:1.0
+docker run -dit -p 80:80 welcome:1.0
+docker ps
+docker exec YourContainerID ls
+# observe folder web
+docker stop YourContainerID
+# create a new Dockerfile
+# make sure that index.html is located under current directory
+vi Dockerfile1
+```
+```Dockerfile
+FROM ubuntu
+LABEL Sample Web Page Application
+MAINTAINER Tamer Bincan tbincan@gmail.com
+ENV MY_CAT=fluffy
+RUN apt-get update -y
+RUN apt-get install python3 -y
+RUN apt-get install python3-pip -y
+RUN pip3 install flask
+COPY . /web
+WORKDIR /web
+ADD index.html .
+# CMD python3 /web/web_app.py
+ENTRYPOINT ["python3", "web_app.py"]
+```
+```bash
+# maintainer info
+# env environment variables
+# workdir working directory inside container
+# copy <source> <dest>
+# add <source> <dest>
+# add <website> <dest>
+# add <compressed file> <dest>
+# run mkdir testdir/
+# add /home/ec2-user/index.html /var/www/html/index.html
+# FROM busybox
+# ARG user=someuser
+# ARG build_no=1.0
+# docker build --build-arg user=what_user build_no=1.1
+docker build -t welcome:1.1 -f Dockerfile1 .
+docker images
+docker ps
+docker inspect welcome:1.1
+docker run -dit -p 80:80 welcome:1.1
+docker exec YourContainerID printenv
+docker stop YourContainerID
+```
+# Difference between ENTRYPOINT & CMD
+```bash
+vi Dockerfile-sleep
+```
+```Dockerfile
+FROM busybox
+ENTRYPOINT ["sleep"]
+CMD ["10"]
+```
+```bash
+# entrypoing ["sleep"] # cannot be changed
+# cmd ["10"] # can be changed
+docker build -t sleep1 -f Dockerfile-sleep .
+docker run -it sleep1 
+# it will sleep for 10 seconds
+docker run sleep1 3
+# this time the container will sleep for 3 seconds
+docker run -it 9deje 2
+# now it will sleep 2 seconds
+
 # make sure that you give below command under web folder
 docker build -t "PUT_YOUR_NAME_HERE/webapp:1.0" .
+# docker build -t tbincan/webapp:1.0 .
 docker image ls
 docker run -d --name firstapp -p 80:80 PUT_YOUR_NAME_HERE/webapp:1.0
+# docker run -d --name firstapp -p 80:80 tbincan/webapp:1.0
 docker ps
 # check your public ip of your instance and observe the web page
 # Using Docker Registry
@@ -128,13 +202,37 @@ CMD python ./web_app.py
 ```
 ```bash
 docker build -t "PUT_YOUR_NAME_HERE/webapp:2.0" -f ./Dockerfile2 .
-docker image ls 
-docker run -d --name firstapp2 -p:8080:80 PUT_YOUR_NAME_HERE/webapp:2.0
+# docker build -t tbincan/webapp:2.0 -f ./Dockerfile2 .
+docker image ls
+# observe the size differences 
+docker run -d --name firstapp2 -p 8080:80 PUT_YOUR_NAME_HERE/webapp:2.0
+# docker run -d --name firstapp2 -p 8080:80 tbincan/webapp:2.0
 docker push PUT_YOUR_NAME_HERE/webapp:2.0
+# observe layer already exists
 # observe your docker registry page 
-docker stop firstapp
+docker stop firstapp firstapp2
 docker stop $(docker ps -q)
-docker rm firstapp
+# create a Dockerfile for nginx
+# seach through official docker hub nginx image tag 
+vi Dockerfilenginx
+```
+```Dockerfile
+FROM nginx:latest
+COPY index.html /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+```bash
+docker build -t ntest -f Dockerfilenginx .
+docker run -dit -p 80:80 ntest
+# try to run nginx with volume mapping
+docker logs 66
+docker logs -f 66
+docker stop 66
 docker rm $(docker ps -aq)
+docker rm -f $(docker ps -aq)
 docker system prune 
 docker system prune -a
+docker ps
+docker ps -a
+docker images
